@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-03-03",
+  "d1_databases": [
+    {
+      "binding": "backend",
+      "database_name": "backend",
+      "database_id": "72d85fe6-54e8-4c14-9859-f1e56a8b9eda",
+      "migrations_dir": "drizzle/migrations",
+    },
+  ],
+}
