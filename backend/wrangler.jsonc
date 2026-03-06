@@ -3,6 +3,12 @@
   "name": "backend",
   "main": "src/index.ts",
   "compatibility_date": "2026-03-03",
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+    },
+  },
   "d1_databases": [
     {
       "binding": "DB",
