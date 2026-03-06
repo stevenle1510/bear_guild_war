@@ -234,6 +234,16 @@ class ApiClient {
     );
   }
 
+  adminDeleteRegistration(token: string, registrationId: number) {
+    return this.request<{ success: boolean }>(
+      `/admin/registrations/${registrationId}`,
+      {
+        method: "DELETE"
+      },
+      token
+    );
+  }
+
   adminAssignRegistrationTeam(
     token: string,
     registrationId: number,

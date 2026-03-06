@@ -1,5 +1,6 @@
 "use client";
 
+import { Confirm } from "@/components/Confirm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,7 +47,14 @@ import {
   useSensors
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, LogOut, Plus, RotateCcw, Shield } from "lucide-react";
+import {
+  GripVertical,
+  LogOut,
+  Plus,
+  RotateCcw,
+  Shield,
+  Trash2
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -119,12 +127,16 @@ function RegistrationCard({
   registration,
   containerId,
   canDrag,
-  timeZone
+  timeZone,
+  onDelete,
+  isDeleting
 }: {
   registration: Registration;
   containerId: ContainerId;
   canDrag: boolean;
   timeZone: string;
+  onDelete?: (registrationId: number) => Promise<void> | void;
+  isDeleting?: boolean;
 }) {
   const draggableId = `reg-${registration.id}`;
   const hasNote = Boolean(registration.note?.trim());
@@ -182,9 +194,39 @@ function RegistrationCard({
           )}
           <p className="text-[11px] text-muted-foreground">{displayRanges}</p>
         </div>
-        <Badge className={roleColor(registration.primaryRole)}>
-          {registration.primaryRole}
-        </Badge>
+        <div className="flex flex-col gap-1">
+          <Badge className={roleColor(registration.primaryRole)}>
+            {registration.primaryRole}
+          </Badge>
+          {registration.secondaryRole && (
+            <Badge className={roleColor(registration.secondaryRole)}>
+              {registration.secondaryRole}
+            </Badge>
+          )}
+        </div>
+        {onDelete ? (
+          <Confirm
+            title={`Delete registration for ${registration.name}?`}
+            description="This action cannot be undone."
+            confirmLabel={isDeleting ? "Deleting..." : "Delete"}
+            onConfirm={async () => {
+              await onDelete(registration.id);
+            }}
+            disabled={isDeleting}
+          >
+            <Button
+              type="button"
+              size="icon"
+              variant="destructive"
+              className="h-7 w-7"
+              disabled={isDeleting}
+              onPointerDown={event => event.stopPropagation()}
+              onClick={event => event.stopPropagation()}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </Confirm>
+        ) : null}
       </div>
     </div>
   );
@@ -261,6 +303,9 @@ function DayBoard({ day, isAdmin }: { day: Day; isAdmin: boolean }) {
   const createTeam = useGuildWarStore(state => state.createTeam);
   const updateTeam = useGuildWarStore(state => state.updateTeam);
   const deleteTeam = useGuildWarStore(state => state.deleteTeam);
+  const deleteRegistration = useGuildWarStore(
+    state => state.deleteRegistration
+  );
 
   const [activeRegistrationId, setActiveRegistrationId] = useState<
     number | null
@@ -269,6 +314,9 @@ function DayBoard({ day, isAdmin }: { day: Day; isAdmin: boolean }) {
   const [teamPopoverOpen, setTeamPopoverOpen] = useState(false);
   const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [deletingRegistrationId, setDeletingRegistrationId] = useState<
+    number | null
+  >(null);
   const localTimeZone = useMemo(() => getUserTimeZone(), []);
   const [now, setNow] = useState(() => new Date());
   const estTime = useMemo(() => formatClock(now, EST_TIME_ZONE), [now]);
@@ -378,6 +426,22 @@ function DayBoard({ day, isAdmin }: { day: Day; isAdmin: boolean }) {
     }
   };
 
+  const handleDeleteRegistration = async (registrationId: number) => {
+    if (!isAdmin) return;
+
+    try {
+      setDeletingRegistrationId(registrationId);
+      await deleteRegistration({ day, registrationId });
+      toast.success("Registration deleted");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to delete registration"
+      );
+    } finally {
+      setDeletingRegistrationId(null);
+    }
+  };
+
   return (
     <DndContext
       sensors={sensors}
@@ -450,6 +514,8 @@ function DayBoard({ day, isAdmin }: { day: Day; isAdmin: boolean }) {
                     containerId="available"
                     canDrag={isAdmin}
                     timeZone={localTimeZone}
+                    onDelete={isAdmin ? handleDeleteRegistration : undefined}
+                    isDeleting={deletingRegistrationId === item.id}
                   />
                 ))
               )}
@@ -548,6 +614,10 @@ function DayBoard({ day, isAdmin }: { day: Day; isAdmin: boolean }) {
                           containerId={dropId}
                           canDrag={isAdmin}
                           timeZone={localTimeZone}
+                          onDelete={
+                            isAdmin ? handleDeleteRegistration : undefined
+                          }
+                          isDeleting={deletingRegistrationId === member.id}
                         />
                       ))
                     )}
@@ -626,11 +696,11 @@ export default function GuildWarPage() {
             <TabsTrigger value="Sunday">Sunday</TabsTrigger>
           </TabsList>
           {isAdmin ? (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isResetting}
-              onClick={async () => {
+            <Confirm
+              title="Reset all guild war data?"
+              description="This will remove all teams and registrations, and cannot be undone."
+              confirmLabel={isResetting ? "Resetting..." : "Reset"}
+              onConfirm={async () => {
                 try {
                   setIsResetting(true);
                   await resetGuildWar();
@@ -645,10 +715,13 @@ export default function GuildWarPage() {
                   setIsResetting(false);
                 }
               }}
+              disabled={isResetting}
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              {isResetting ? "Resetting..." : "Reset"}
-            </Button>
+              <Button variant="outline" size="sm" disabled={isResetting}>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                {isResetting ? "Resetting..." : "Reset"}
+              </Button>
+            </Confirm>
           ) : null}
         </div>
 

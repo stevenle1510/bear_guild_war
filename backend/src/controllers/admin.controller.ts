@@ -3,7 +3,10 @@ import { HTTPException } from "hono/http-exception";
 import { getDb } from "../db/client";
 import { loginAdmin, logoutAdmin } from "../services/admin-auth.service";
 import { resetGuildWar } from "../services/guild-war.service";
-import { listRegistrations } from "../services/registration.service";
+import {
+  deleteRegistration,
+  listRegistrations,
+} from "../services/registration.service";
 import {
   assignRegistrationTeam,
   createTeam,
@@ -130,6 +133,20 @@ export const deleteTeamController = async (c: import("hono").Context<HonoEnv>) =
   }
 
   await deleteTeam(getDb(c.env), id);
+
+  return c.json({ success: true });
+};
+
+export const deleteRegistrationController = async (
+  c: import("hono").Context<HonoEnv>,
+) => {
+  const id = Number.parseInt(c.req.param("id"), 10);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new HTTPException(400, { message: "Invalid registration id" });
+  }
+
+  await deleteRegistration(getDb(c.env), id);
 
   return c.json({ success: true });
 };

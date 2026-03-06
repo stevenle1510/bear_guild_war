@@ -1,5 +1,5 @@
 export type Env = {
-  DB: D1Database;
+  backend: D1Database;
 };
 
 export type AppVariables = {

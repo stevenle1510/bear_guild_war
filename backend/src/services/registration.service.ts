@@ -313,3 +313,20 @@ export const listRegistrations = async (
     timeSlots: slotMap.get(row.id) ?? [row.timeSlot],
   }));
 };
+
+export const deleteRegistration = async (
+  db: Database,
+  registrationId: number,
+): Promise<void> => {
+  const existing = await db.query.guildWarRegistrations.findFirst({
+    where: eq(guildWarRegistrations.id, registrationId),
+  });
+
+  if (!existing) {
+    throw new HTTPException(404, { message: "Registration not found" });
+  }
+
+  await db
+    .delete(guildWarRegistrations)
+    .where(eq(guildWarRegistrations.id, registrationId));
+};

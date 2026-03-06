@@ -27,6 +27,7 @@ type GuildWarState = {
   updateTeam: (teamId: number, payload: { day: Day; name?: string }) => Promise<void>;
   deleteTeam: (day: Day, teamId: number) => Promise<void>;
   assignRegistrationTeam: (payload: { day: Day; registrationId: number; teamId: number | null }) => Promise<void>;
+  deleteRegistration: (payload: { day: Day; registrationId: number }) => Promise<void>;
   resetGuildWar: () => Promise<void>;
   createRegistration: (payload: Parameters<typeof api.createRegistration>[0]) => Promise<void>;
 };
@@ -204,6 +205,20 @@ export const useGuildWarStore = create<GuildWarState>()(
         if (!token) throw new Error("Admin token is required");
 
         await api.adminAssignRegistrationTeam(token, registrationId, teamId);
+        set(state => ({
+          [dayKey(day)]: {
+            ...state[dayKey(day)],
+            lastFetched: null
+          }
+        }));
+        await get().loadDay(day, { forceRefresh: true });
+      },
+
+      deleteRegistration: async ({ day, registrationId }) => {
+        const token = get().adminToken;
+        if (!token) throw new Error("Admin token is required");
+
+        await api.adminDeleteRegistration(token, registrationId);
         set(state => ({
           [dayKey(day)]: {
             ...state[dayKey(day)],

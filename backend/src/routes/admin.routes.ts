@@ -5,6 +5,7 @@ import {
   adminLogoutController,
   assignTeamController,
   createTeamController,
+  deleteRegistrationController,
   deleteTeamController,
   listRegistrationsController,
   listTeamsController,
@@ -25,6 +26,7 @@ adminRoutes.get("/teams", listTeamsController);
 adminRoutes.post("/teams", createTeamController);
 adminRoutes.patch("/teams/:id", updateTeamController);
 adminRoutes.delete("/teams/:id", deleteTeamController);
+adminRoutes.delete("/registrations/:id", deleteRegistrationController);
 adminRoutes.patch("/registrations/:id/team", assignTeamController);
 adminRoutes.post("/guild-war/reset", resetGuildWarController);
 
