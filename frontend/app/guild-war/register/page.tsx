@@ -92,6 +92,8 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const localTimeZone = useMemo(() => getUserTimeZone(), []);
   const [now, setNow] = useState(() => new Date());
+  const canSelectSecondaryRole =
+    secondaryClass1 !== "none" && secondaryClass2 !== "none";
 
   const [saturday, setSaturday] = useState<DayParticipation>({
     enabled: true,
@@ -118,6 +120,12 @@ export default function RegisterPage() {
 
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!canSelectSecondaryRole && secondaryRole !== "none") {
+      setSecondaryRole("none");
+    }
+  }, [canSelectSecondaryRole, secondaryRole]);
 
   const estTime = useMemo(() => formatClock(now, EST_TIME_ZONE), [now]);
   const estDate = useMemo(() => formatDate(now, EST_TIME_ZONE), [now]);
@@ -329,8 +337,15 @@ export default function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label>Secondary Role</Label>
-              <Select value={secondaryRole} onValueChange={setSecondaryRole}>
-                <SelectTrigger className="w-full">
+              <Select
+                value={secondaryRole}
+                onValueChange={setSecondaryRole}
+                disabled={!canSelectSecondaryRole}
+              >
+                <SelectTrigger
+                  className="w-full"
+                  disabled={!canSelectSecondaryRole}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

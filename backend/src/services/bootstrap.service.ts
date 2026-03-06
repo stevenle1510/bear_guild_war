@@ -30,19 +30,18 @@ export const ensureBootstrapData = async (db: Database): Promise<void> => {
       .from(teams)
       .where(eq(teams.day, day));
 
-    const missingCount = TEAM_COUNT_PER_DAY - existingDayTeams.length;
-
-    if (missingCount <= 0) {
+    // Seed defaults only when a day has no teams at all.
+    // Otherwise, preserve manual admin changes (e.g. deletions).
+    if (existingDayTeams.length > 0) {
       continue;
     }
 
-    const startIndex = existingDayTeams.length + 1;
     const teamsToInsert: Array<{ day: Day; name: string; createdAt: number }> = [];
 
-    for (let index = 0; index < missingCount; index += 1) {
+    for (let index = 0; index < TEAM_COUNT_PER_DAY; index += 1) {
       teamsToInsert.push({
         day,
-        name: `Team ${startIndex + index}`,
+        name: `Team ${index + 1}`,
         createdAt: nowEpochSeconds(),
       });
     }
