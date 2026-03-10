@@ -20,7 +20,7 @@ import {
   type Day,
   type TimeSlot
 } from "@/lib/api";
-import { formatSlotFromEst, getUserTimeZone } from "@/lib/timezone";
+import { getUserTimeZone } from "@/lib/timezone";
 import { useGuildWarStore } from "@/stores/guildWarStore";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -43,7 +43,9 @@ const classLabel: Record<ClassType, string> = {
   thundercryBlade: "Thundercry Blade",
   stormreakerSpear: "Stormreaker Spear",
   infernalTwinblades: "Infernal Twinblades",
-  mortalRopeDart: "Mortal Rope Dart"
+  mortalRopeDart: "Mortal Rope Dart",
+  everspringUmbrella: "Everspring Umbrella",
+  unFetteredRopeDart: "Unfettered Rope Dart"
 };
 
 const ROLE_OPTIONS = ["dps", "healer", "tank"] as const;
@@ -129,8 +131,14 @@ export default function RegisterPage() {
 
   const estTime = useMemo(() => formatClock(now, EST_TIME_ZONE), [now]);
   const estDate = useMemo(() => formatDate(now, EST_TIME_ZONE), [now]);
-  const localTime = useMemo(() => formatClock(now, localTimeZone), [now, localTimeZone]);
-  const localDate = useMemo(() => formatDate(now, localTimeZone), [now, localTimeZone]);
+  const localTime = useMemo(
+    () => formatClock(now, localTimeZone),
+    [now, localTimeZone]
+  );
+  const localDate = useMemo(
+    () => formatDate(now, localTimeZone),
+    [now, localTimeZone]
+  );
 
   const toggleSlot = (day: Day, slot: TimeSlot, checked: boolean) => {
     const setter = day === "Saturday" ? setSaturday : setSunday;
@@ -216,8 +224,13 @@ export default function RegisterPage() {
         </Button>
       </div>
       <div className="space-y-1 text-xs text-muted-foreground">
-        <p>Time base: US EST ({EST_TIME_ZONE}) {estTime} ({estDate})</p>
-        <p>Displayed in your local timezone: {localTimeZone} {localTime} ({localDate})</p>
+        <p>
+          Time base: US EST ({EST_TIME_ZONE}) {estTime} ({estDate})
+        </p>
+        <p>
+          Displayed in your local timezone: {localTimeZone} {localTime} (
+          {localDate})
+        </p>
       </div>
 
       <Card>
@@ -388,9 +401,8 @@ export default function RegisterPage() {
                 </div>
                 {state.enabled && (
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {TIME_SLOTS.map(slot => {
+                    {TIME_SLOTS.map((slot, index) => {
                       const checked = state.slots.includes(slot);
-                      const localRange = formatSlotFromEst(day, slot, localTimeZone).range;
                       return (
                         <label
                           key={`${day}-${slot}`}
@@ -402,7 +414,7 @@ export default function RegisterPage() {
                               toggleSlot(day, slot, Boolean(value))
                             }
                           />
-                          <span>{localRange}</span>
+                          <span>Match {index + 1}</span>
                         </label>
                       );
                     })}

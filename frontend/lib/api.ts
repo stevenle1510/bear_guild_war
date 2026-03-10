@@ -24,7 +24,9 @@ export const CLASS_TYPES = [
   "thundercryBlade",
   "stormreakerSpear",
   "infernalTwinblades",
-  "mortalRopeDart"
+  "mortalRopeDart",
+  "everspringUmbrella",
+  "unFetteredRopeDart"
 ] as const;
 
 export type ClassType = (typeof CLASS_TYPES)[number];

@@ -29,9 +29,10 @@ import {
   CLASS_TYPES,
   type ClassType,
   type Day,
-  type Registration
+  type Registration,
+  TIME_SLOTS
 } from "@/lib/api";
-import { formatMergedSlotRangesFromEst, getUserTimeZone } from "@/lib/timezone";
+import { getUserTimeZone } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 import { useGuildWarStore } from "@/stores/guildWarStore";
 import {
@@ -100,7 +101,9 @@ const classLabel: Record<ClassType, string> = {
   thundercryBlade: "Thundercry Blade",
   stormreakerSpear: "Stormreaker Spear",
   infernalTwinblades: "Infernal Twinblades",
-  mortalRopeDart: "Mortal Rope Dart"
+  mortalRopeDart: "Mortal Rope Dart",
+  everspringUmbrella: "Everspring Umbrella",
+  unFetteredRopeDart: "Unfettered Rope Dart"
 };
 
 const formatClass = (value: string) => {
@@ -127,14 +130,12 @@ function RegistrationCard({
   registration,
   containerId,
   canDrag,
-  timeZone,
   onDelete,
   isDeleting
 }: {
   registration: Registration;
   containerId: ContainerId;
   canDrag: boolean;
-  timeZone: string;
   onDelete?: (registrationId: number) => Promise<void> | void;
   isDeleting?: boolean;
 }) {
@@ -159,15 +160,47 @@ function RegistrationCard({
     opacity: isDragging ? 0.4 : 1
   };
 
-  const displayRanges = useMemo(
-    () =>
-      formatMergedSlotRangesFromEst(
-        registration.day,
-        registration.timeSlots,
-        timeZone
-      ),
-    [registration.day, registration.timeSlots, timeZone]
-  );
+  const matchLabels = useMemo(() => {
+    const orderedSlots = [...registration.timeSlots].sort((a, b) => {
+      const indexA = TIME_SLOTS.indexOf(a);
+      const indexB = TIME_SLOTS.indexOf(b);
+      if (indexA === -1 && indexB === -1) return 0;
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+
+    const matchNumbers = orderedSlots
+      .map(slot => {
+        const index = TIME_SLOTS.indexOf(slot);
+        return index === -1 ? null : index + 1;
+      })
+      .filter((n): n is number => n !== null);
+
+    if (matchNumbers.length === 0) return [];
+
+    const ranges: { start: number; end: number }[] = [];
+    let currentStart = matchNumbers[0];
+    let currentEnd = matchNumbers[0];
+
+    for (let i = 1; i < matchNumbers.length; i++) {
+      if (matchNumbers[i] === currentEnd + 1) {
+        currentEnd = matchNumbers[i];
+      } else {
+        ranges.push({ start: currentStart, end: currentEnd });
+        currentStart = matchNumbers[i];
+        currentEnd = matchNumbers[i];
+      }
+    }
+    ranges.push({ start: currentStart, end: currentEnd });
+
+    return ranges.map(range => {
+      if (range.start === range.end) {
+        return `Match ${range.start}`;
+      }
+      return `Match ${range.start} ~ ${range.end}`;
+    });
+  }, [registration.timeSlots]);
 
   const cardContent = (
     <div
@@ -192,7 +225,11 @@ function RegistrationCard({
               {formatClassPair(registration.secondaryClass)}
             </p>
           )}
-          <p className="text-[11px] text-muted-foreground">{displayRanges}</p>
+          {matchLabels.length > 0 && (
+            <p className="text-[11px] text-muted-foreground">
+              {matchLabels.join(", ")}
+            </p>
+          )}
         </div>
         <div className="flex flex-col gap-1">
           <Badge className={roleColor(registration.primaryRole)}>
@@ -513,7 +550,6 @@ function DayBoard({ day, isAdmin }: { day: Day; isAdmin: boolean }) {
                     registration={item}
                     containerId="available"
                     canDrag={isAdmin}
-                    timeZone={localTimeZone}
                     onDelete={isAdmin ? handleDeleteRegistration : undefined}
                     isDeleting={deletingRegistrationId === item.id}
                   />
@@ -613,7 +649,6 @@ function DayBoard({ day, isAdmin }: { day: Day; isAdmin: boolean }) {
                           registration={member}
                           containerId={dropId}
                           canDrag={isAdmin}
-                          timeZone={localTimeZone}
                           onDelete={
                             isAdmin ? handleDeleteRegistration : undefined
                           }
@@ -636,7 +671,6 @@ function DayBoard({ day, isAdmin }: { day: Day; isAdmin: boolean }) {
               registration={activeRegistration}
               containerId="available"
               canDrag={false}
-              timeZone={localTimeZone}
             />
           </div>
         ) : null}

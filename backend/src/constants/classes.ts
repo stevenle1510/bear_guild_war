@@ -11,4 +11,6 @@ export const classEnum = [
   "stormreakerSpear",
   "infernalTwinblades",
   "mortalRopeDart",
+  "everspringUmbrella",
+  "unFetteredRopeDart",
 ] as const;

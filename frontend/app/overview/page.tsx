@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoadingState } from "@/components/ui/loading-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TIME_SLOTS, type Day } from "@/lib/api";
-import { formatSlotFromEst, getUserTimeZone } from "@/lib/timezone";
+import { getUserTimeZone } from "@/lib/timezone";
 import { useGuildWarStore } from "@/stores/guildWarStore";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -172,15 +172,15 @@ function DayOverview({
           <Badge variant="outline">P = Participating (not assigned)</Badge>
           <Badge variant="outline">A = Assigned to a team</Badge>
         </div>
-        <table className="w-full min-w-[900px] border-collapse text-sm">
+        <table className="w-full min-w-225 border-collapse text-sm">
           <thead>
             <tr>
               <th className="border px-2 py-2 text-left">Name</th>
               <th className="border px-2 py-2 text-left">Primary Role</th>
               <th className="border px-2 py-2 text-left">Team</th>
-              {TIME_SLOTS.map(slot => (
+              {TIME_SLOTS.map((slot, index) => (
                 <th key={slot} className="border px-2 py-2 text-center text-xs">
-                  {formatSlotFromEst(day, slot, timeZone).label}
+                  Match {index + 1}
                 </th>
               ))}
             </tr>
@@ -189,7 +189,9 @@ function DayOverview({
             {registrations.map(item => (
               <tr key={item.id}>
                 <td className="border px-2 py-2">{item.name}</td>
-                <td className="border px-2 py-2">{item.primaryRole}</td>
+                <td className="border px-2 py-2">
+                  {item.primaryRole.toUpperCase()}
+                </td>
                 <td className="border px-2 py-2">
                   {item.teamId
                     ? (teamNameById.get(item.teamId) ?? `#${item.teamId}`)
